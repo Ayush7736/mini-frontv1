@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>AI Chat</title>
+
+<style>
+body{
+font-family: Arial;
+background:#0f172a;
+color:white;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+margin:0;
+}
+
+.chat{
+width:350px;
+height:500px;
+background:#020617;
+border-radius:12px;
+display:flex;
+flex-direction:column;
+overflow:hidden;
+box-shadow:0 0 20px rgba(0,0,0,0.4);
+}
+
+.messages{
+flex:1;
+padding:15px;
+overflow-y:auto;
+}
+
+.msg{
+margin:8px 0;
+padding:8px 12px;
+border-radius:8px;
+max-width:80%;
+}
+
+.user{
+background:#2563eb;
+align-self:flex-end;
+}
+
+.ai{
+background:#1e293b;
+align-self:flex-start;
+}
+
+.input{
+display:flex;
+border-top:1px solid #1e293b;
+}
+
+input{
+flex:1;
+padding:10px;
+border:none;
+outline:none;
+background:#020617;
+color:white;
+}
+
+button{
+background:#2563eb;
+border:none;
+color:white;
+padding:10px 15px;
+cursor:pointer;
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="chat">
+
+<div class="messages" id="messages"></div>
+
+<div class="input">
+<input id="text" placeholder="Type message...">
+<button onclick="send()">Send</button>
+</div>
+
+</div>
+
+<script>
+
+const API="https://miniplm-render.onrender.com/chat"
+
+function add(text,cls){
+let div=document.createElement("div")
+div.className="msg "+cls
+div.innerText=text
+document.getElementById("messages").appendChild(div)
+div.scrollIntoView()
+}
+
+async function send(){
+
+let input=document.getElementById("text")
+
+let msg=input.value.trim()
+
+if(!msg) return
+
+add(msg,"user")
+
+input.value=""
+
+add("typing...","ai")
+
+let res=await fetch(API,{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+message:msg
+})
+})
+
+let data=await res.json()
+
+document.querySelector(".ai:last-child").remove()
+
+add(data.reply,"ai")
+
+}
+
+document.getElementById("text").addEventListener("keypress",e=>{
+if(e.key==="Enter") send()
+})
+
+</script>
+
+</body>
+
+</html>
