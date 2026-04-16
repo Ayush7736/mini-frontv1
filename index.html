@@ -1,80 +1,62 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 
 <head>
 
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-<title>Local AI Chat</title>
+<title>AI Chat</title>
 
 <style>
 
 body{
-
 margin:0;
-font-family:system-ui;
-
+font-family:Arial;
 background:#020617;
-
 height:100vh;
-
 display:flex;
 justify-content:center;
 align-items:center;
+}
+
+.container{
+
+width:420px;
+max-width:95%;
+height:600px;
+
+background:#020617;
+
+border-radius:14px;
+
+display:flex;
+flex-direction:column;
+
+border:1px solid #1e293b;
+
+box-shadow:0 0 40px rgba(0,0,0,0.6);
+
+}
+
+.top{
+
+padding:14px;
+
+border-bottom:1px solid #1e293b;
+
+font-weight:bold;
+
+color:white;
 
 }
 
 .chat{
 
-width:420px;
-max-width:95%;
-
-height:600px;
-
-background:#020617;
-
-border-radius:16px;
-
-display:flex;
-flex-direction:column;
-
-box-shadow:0 10px 40px rgba(0,0,0,0.6);
-
-overflow:hidden;
-
-border:1px solid #1e293b;
-
-}
-
-.header{
-
-padding:15px;
-
-border-bottom:1px solid #1e293b;
-
-display:flex;
-justify-content:space-between;
-align-items:center;
-
-font-weight:600;
-
-}
-
-.status{
-
-font-size:12px;
-opacity:0.7;
-
-}
-
-.messages{
-
 flex:1;
 
-overflow-y:auto;
+overflow:auto;
 
-padding:20px;
+padding:15px;
 
 display:flex;
 flex-direction:column;
@@ -85,24 +67,21 @@ gap:10px;
 
 .msg{
 
-padding:12px 14px;
+padding:10px 14px;
 
-border-radius:14px;
+border-radius:12px;
 
 max-width:80%;
 
+color:white;
+
 font-size:14px;
-
-line-height:1.4;
-
-word-wrap:break-word;
 
 }
 
 .user{
 
 background:#2563eb;
-color:white;
 
 align-self:flex-end;
 
@@ -111,24 +90,16 @@ align-self:flex-end;
 .ai{
 
 background:#111827;
-color:#e5e7eb;
 
 align-self:flex-start;
 
 }
 
-.loading{
-
-opacity:0.6;
-font-style:italic;
-
-}
-
-.inputArea{
+.bottom{
 
 display:flex;
 
-padding:12px;
+padding:10px;
 
 border-top:1px solid #1e293b;
 
@@ -138,7 +109,7 @@ input{
 
 flex:1;
 
-padding:12px;
+padding:10px;
 
 border-radius:10px;
 
@@ -154,9 +125,9 @@ outline:none;
 
 button{
 
-margin-left:8px;
+margin-left:6px;
 
-padding:12px 16px;
+padding:10px 16px;
 
 border:none;
 
@@ -176,51 +147,34 @@ background:#1d4ed8;
 
 }
 
-.error{
-
-color:#f87171;
-
-font-size:12px;
-
-padding:6px 12px;
-
-}
-
 </style>
 
 </head>
 
 <body>
 
-<div class="chat">
+<div class="container">
 
-<div class="header">
-
-<span>Local AI</span>
-
-<span id="status" class="status">connecting...</span>
-
+<div class="top">
+Local AI
 </div>
 
-<div id="messages" class="messages">
+<div id="chat" class="chat">
 
 <div class="msg ai">
-Hello. I am ready.
+Ready.
 </div>
 
 </div>
 
-<div id="error" class="error"></div>
-
-<div class="inputArea">
+<div class="bottom">
 
 <input
 id="input"
-placeholder="Type message..."
-autocomplete="off"
+placeholder="message"
 />
 
-<button onclick="sendMessage()">
+<button onclick="send()">
 Send
 </button>
 
@@ -230,75 +184,41 @@ Send
 
 <script>
 
-const API="https://miniplm-render.onrender.com/chat"
+const url="https://miniplm-render.onrender.com/chat"
 
-const messages=document.getElementById("messages")
+const chat=document.getElementById("chat")
 
-const input=document.getElementById("input")
-
-const status=document.getElementById("status")
-
-const errorBox=document.getElementById("error")
-
-function addMessage(text,type){
+function add(text,type){
 
 const div=document.createElement("div")
 
 div.className="msg "+type
 
-div.textContent=text
+div.innerText=text
 
-messages.appendChild(div)
+chat.appendChild(div)
 
-messages.scrollTop=messages.scrollHeight
-
-return div
+chat.scrollTop=chat.scrollHeight
 
 }
 
-async function testConnection(){
+async function send(){
 
-try{
-
-await fetch(API,{
-method:"POST",
-headers:{
-"Content-Type":"application/json"
-},
-body:JSON.stringify({
-message:"ping"
-})
-})
-
-status.textContent="online"
-
-}
-
-catch{
-
-status.textContent="offline"
-
-}
-
-}
-
-async function sendMessage(){
+const input=document.getElementById("input")
 
 const text=input.value.trim()
 
 if(!text) return
 
-errorBox.textContent=""
-
 input.value=""
 
-addMessage(text,"user")
+add(text,"user")
 
-const loading=addMessage("thinking...","ai loading")
+const thinking=add("thinking...","ai")
 
 try{
 
-const res=await fetch(API,{
+const r=await fetch(url,{
 
 method:"POST",
 
@@ -312,39 +232,28 @@ message:text
 
 })
 
-if(!res.ok){
+const data=await r.json()
 
-throw new Error("server error")
+chat.lastChild.remove()
 
-}
-
-const data=await res.json()
-
-loading.remove()
-
-addMessage(data.reply,"ai")
+add(data.reply,"ai")
 
 }
 
-catch(err){
+catch{
 
-loading.textContent="Server sleeping... wait 20 sec"
-
-errorBox.textContent=err.message
-
-status.textContent="offline"
+chat.lastChild.innerText="error or server sleeping"
 
 }
 
 }
 
-input.addEventListener("keypress",e=>{
+document.getElementById("input")
+.addEventListener("keypress",e=>{
 
-if(e.key==="Enter") sendMessage()
+if(e.key==="Enter") send()
 
 })
-
-testConnection()
 
 </script>
 
